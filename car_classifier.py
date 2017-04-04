@@ -117,34 +117,24 @@ def train_model():
 
     return svc, X_scaler
 
-
+import sys
+# Run with argument "train" in order to train the model.
 if __name__ == "__main__":
     svc = None
     X_scaler = None
-
-    #svc, X_scaler = train_model()
-
-    if svc is None or X_scaler is None:
-        loaded_model = pickle.load(open("model/model_for_submission.sav", 'rb'))
-        loaded_X_scaler = pickle.load(open('model/X_scaler.pkl', 'rb'))
-        print("Loaded model from file.")
+    if "train" in sys.argv:
+        print("Training Model..")
+        model, X_scaler = train_model()
+        print("Done.")
     else:
-        loaded_model = svc
-        loaded_X_scaler = X_scaler
-        print("Used model from training.")
+        print("Loading model from file..")
+        model = pickle.load(open("model/model_for_submission.sav", 'rb'))
+        X_scaler = pickle.load(open('model/X_scaler.pkl', 'rb'))
+        print("Done.")
 
-
-    # ystart = 400
-    # ystop = 750
-    # scale = 2
-    #
-
-    # out_img = find_cars(draw_image, ystart, ystop, scale, loaded_model, loaded_X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
-    #                     hist_bins)
     for i in range(1,7):
         image = mpimg.imread('test_images/test' + str(i) + '.jpg')
-        # image_with_cars = process_image(image, loaded_model, loaded_X_scaler)
-        image_with_cars = find_cars_in_image(image, 400, 657, 1, loaded_model, loaded_X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space)
+        image_with_cars = find_cars_in_image(image, 400, 657, 1, model, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space)
         cv2.imwrite('output_images/window_test' + str(i) + '.jpg', cv2.cvtColor(image_with_cars,cv2.COLOR_RGB2BGR))
 
 

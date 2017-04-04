@@ -120,7 +120,7 @@ if __name__ == "__main__":
     X_scaler = pickle.load(open('model/X_scaler.pkl', 'rb'))
     print("Loaded model and scaler from file.")
     video = 'project_video'
-    white_output = '{}_test_25_by_4_on_last_12.mp4'.format(video)
+    white_output = '{}_test.mp4'.format(video)
     clip1 = VideoFileClip('{}.mp4'.format(video))#.subclip(35, 44)
     white_clip = clip1.fl_image(process_image)  # NOTE: this function expects color images!!
     white_clip.write_videofile(white_output, audio=False)
