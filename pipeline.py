@@ -58,11 +58,24 @@ _windows = []
 #     draw_image = draw_labeled_bboxes(draw_image, labels)
 #     return draw_image
 
+# add global heat map
+_heatmaps = []
+_heatmap_sum = np.zeros((720,1280)).astype(np.float64)
+
 ystart = 400
 ystop = 657
 def process_image(image):
+    global _heatmaps
+    global _heatmap_sum
     draw_img = np.copy(image)
     hot_windows = []
+    # hot_windows.extend(
+    #     find_cars(image, ystart, ystop, 0.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
+    #               hist_bins,
+    #               color_space=color_space))
+    # hot_windows.extend(
+    #     find_cars(image, ystart, ystop, 0.75, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
+    #               color_space=color_space))
     hot_windows.extend(
         find_cars(image, ystart, ystop, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
                   color_space=color_space))
@@ -72,13 +85,25 @@ def process_image(image):
     hot_windows.extend(
         find_cars(image, ystart, ystop, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
                   color_space=color_space))
+    hot_windows.extend(
+        find_cars(image, ystart, ystop, 3, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
+                  color_space=color_space))
 
     heat = np.zeros_like(image[:, :, 0]).astype(np.float)
     # Add heat to each box in box list
-    heat = add_heat(heat, hot_windows)
+    current_heat = add_heat(heat, hot_windows)
 
-    # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 3)
+    _heatmap_sum += current_heat
+    _heatmaps.append(current_heat)
+
+    if len(_heatmaps) > 12:
+        heat_to_remove = _heatmaps.pop(0)
+        _heatmap_sum -= heat_to_remove
+        _heatmap_sum = np.clip(_heatmap_sum, 0, 100000)
+        heat = apply_threshold(_heatmap_sum, 25)
+    else:
+        # Apply threshold to help remove false positives
+        heat = apply_threshold(current_heat, 3)
 
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
@@ -91,12 +116,12 @@ def process_image(image):
 
 if __name__ == "__main__":
 
-    svc = pickle.load(open("model/model_0.9899.sav", 'rb'))
+    svc = pickle.load(open("model/model_for_submission.sav", 'rb'))
     X_scaler = pickle.load(open('model/X_scaler.pkl', 'rb'))
     print("Loaded model and scaler from file.")
     video = 'project_video'
-    white_output = '{}_test_1.mp4'.format(video)
-    clip1 = VideoFileClip('{}.mp4'.format(video)).subclip(31, 44)
+    white_output = '{}_test_25_by_4_on_last_12.mp4'.format(video)
+    clip1 = VideoFileClip('{}.mp4'.format(video))#.subclip(35, 44)
     white_clip = clip1.fl_image(process_image)  # NOTE: this function expects color images!!
     white_clip.write_videofile(white_output, audio=False)
 

@@ -4,19 +4,12 @@ import numpy as np
 import cv2
 import glob
 import time
+import pickle
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
-from skimage.feature import hog
-from feature_extraction_utils import *
-# NOTE: the next import is only valid for scikit-learn version <= 0.17
-# for scikit-learn >= 0.18 use:
-# from sklearn.model_selection import train_test_split
 from sklearn.model_selection import train_test_split
-from scipy.ndimage.measurements import label
-import pickle
-from sklearn.externals import joblib
 
-### TODO: Tweak these parameters and see how the results change.
+from feature_extraction_utils import data_look, extract_features
 from processing_utils import find_cars_in_image
 
 color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -125,52 +118,6 @@ def train_model():
     return svc, X_scaler
 
 
-
-
-
-
-_windows = []
-
-
-# TODO optimize the hog process like in find_cars
-def process_image(image, model, X_scaler):
-    draw_image = np.copy(image)
-    image_for_classification = image.astype(np.float32) / 255
-
-    window_sizes = [48, 64, 96, 128]
-    global _windows
-    if len(_windows) == 0:
-        for size in window_sizes:
-            _windows.extend(slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 657],
-                                         xy_window=(size, size), xy_overlap=(0.7, 0.7)))
-        print("Done initializing windows.")
-
-    hot_windows = search_windows(image_for_classification, _windows, model, X_scaler,
-                                 color_space=color_space,
-                                 spatial_size=spatial_size, hist_bins=hist_bins,
-                                 orient=orient, pix_per_cell=pix_per_cell,
-                                 cell_per_block=cell_per_block,
-                                 hog_channel=hog_channel, spatial_feat=spatial_feat,
-                                 hist_feat=hist_feat, hog_feat=hog_feat)
-
-    heat = np.zeros_like(image[:, :, 0]).astype(np.float)
-    # Add heat to each box in box list
-    heat = add_heat(heat, hot_windows)
-
-    # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 5)
-
-    # Visualize the heatmap when displaying
-    heatmap = np.clip(heat, 0, 255)
-
-    # Find final boxes from heatmap using label function
-    labels = label(heatmap)
-    draw_image = draw_labeled_bboxes(draw_image, labels)
-    return draw_image
-
-
-
-
 if __name__ == "__main__":
     svc = None
     X_scaler = None
@@ -178,7 +125,7 @@ if __name__ == "__main__":
     #svc, X_scaler = train_model()
 
     if svc is None or X_scaler is None:
-        loaded_model = pickle.load(open("model/model_0.9899.sav", 'rb'))
+        loaded_model = pickle.load(open("model/model_for_submission.sav", 'rb'))
         loaded_X_scaler = pickle.load(open('model/X_scaler.pkl', 'rb'))
         print("Loaded model from file.")
     else:

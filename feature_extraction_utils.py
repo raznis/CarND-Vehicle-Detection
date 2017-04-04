@@ -1,6 +1,6 @@
+import cv2
 import matplotlib.image as mpimg
 import numpy as np
-import cv2
 from skimage.feature import hog
 
 
@@ -23,6 +23,7 @@ def data_look(car_list, notcar_list):
     data_dict["data_type"] = example_img.dtype
     # Return data_dict
     return data_dict
+
 
 # Define a function to return HOG features and visualization
 def get_hog_features(img, orient, pix_per_cell, cell_per_block,
@@ -273,10 +274,11 @@ def add_heat(heatmap, bbox_list):
 
 
 def apply_threshold(heatmap, threshold):
+    output = np.copy(heatmap)
     # Zero out pixels below the threshold
-    heatmap[heatmap <= threshold] = 0
+    output[output <= threshold] = 0
     # Return thresholded map
-    return heatmap
+    return output
 
 
 def draw_labeled_bboxes(img, labels):
