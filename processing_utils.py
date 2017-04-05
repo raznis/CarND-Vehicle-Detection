@@ -4,7 +4,7 @@ import numpy as np
 
 from scipy.ndimage.measurements import label
 from feature_extraction_utils import get_hog_features, bin_spatial, color_hist, slide_window, add_heat, apply_threshold, \
-    draw_labeled_bboxes
+    draw_labeled_bboxes, draw_boxes
 
 _windows = []
 
@@ -75,20 +75,30 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
     return rectangles
 
-def find_cars_in_image(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space='YCrCb'):
+
+def find_cars_in_image(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space='YCrCb', output_file=None):
+    draw_img = np.copy(img)
     draw_img = np.copy(img)
     hot_windows = []
-    hot_windows.extend(find_cars(img, ystart, ystop, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space=color_space))
     hot_windows.extend(
-        find_cars(img, ystart, ystop, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
+        find_cars(img, ystart, ystop, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
+                  color_space=color_space))
+    hot_windows.extend(
+        find_cars(img, ystart, ystop, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
+                  hist_bins,
                   color_space=color_space))
     hot_windows.extend(
         find_cars(img, ystart, ystop, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
+                  color_space=color_space))
+    hot_windows.extend(
+        find_cars(img, ystart, ystop, 3, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
                   color_space=color_space))
 
     heat = np.zeros_like(img[:, :, 0]).astype(np.float)
     # Add heat to each box in box list
     heat = add_heat(heat, hot_windows)
+
+
 
     # Apply threshold to help remove false positives
     heat = apply_threshold(heat, 3)
@@ -96,9 +106,16 @@ def find_cars_in_image(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
 
+
+
     # Find final boxes from heatmap using label function
     labels = label(heatmap)
     draw_image = draw_labeled_bboxes(draw_img, labels)
+
+    if output_file is not None :
+        cv2.imwrite('output_images/' + output_file + '_boxes.jpg', cv2.cvtColor(draw_boxes(img, hot_windows), cv2.COLOR_RGB2BGR))
+        cv2.imwrite('output_images/' + output_file + '_draw.jpg', cv2.cvtColor(draw_image, cv2.COLOR_RGB2BGR))
+
     return draw_image
 
 

@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     for i in range(1,7):
         image = mpimg.imread('test_images/test' + str(i) + '.jpg')
-        image_with_cars = find_cars_in_image(image, 400, 657, 1, model, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space)
+        image_with_cars = find_cars_in_image(image, 400, 657, 1, model, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, color_space, output_file="test" + str(i))
         cv2.imwrite('output_images/window_test' + str(i) + '.jpg', cv2.cvtColor(image_with_cars,cv2.COLOR_RGB2BGR))
 
 

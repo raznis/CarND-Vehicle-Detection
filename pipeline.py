@@ -69,13 +69,6 @@ def process_image(image):
     global _heatmap_sum
     draw_img = np.copy(image)
     hot_windows = []
-    # hot_windows.extend(
-    #     find_cars(image, ystart, ystop, 0.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
-    #               hist_bins,
-    #               color_space=color_space))
-    # hot_windows.extend(
-    #     find_cars(image, ystart, ystop, 0.75, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
-    #               color_space=color_space))
     hot_windows.extend(
         find_cars(image, ystart, ystop, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins,
                   color_space=color_space))
